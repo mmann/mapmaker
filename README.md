@@ -1,10 +1,15 @@
 # bc18mapedit
+
 Map editor for Battlecode 2018
+
 Based on map editor by AVTurbine (https://github.com/AVturbine/mapmaker)
 
 How to use:
+
 Clone or download this repo to somewhere on your computer
+
 Make sure you have Python 3 installed
+
 Run main.py and follow the instructions
 
 On Windows 10 Home, you run main.py by following these steps:

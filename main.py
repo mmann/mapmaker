@@ -64,7 +64,7 @@ def json_bot_list(bots, earth_height):
                     "OnMap": {
                         "planet": "Earth",
                         "x": i[1],
-                        "y": earth_height - i[0] - 1
+                        "y": i[0]
                     }
                 },
                 "max_capacity": 8,
@@ -109,21 +109,22 @@ def json_orbit(amplitude, period, center):
     }
 
 
-def create_json(seed, width, height, earth_terrain, earth_karb, bots, mars_terrain, mars_karb, asteroids, orbit):
+def create_json(seed, earth_height, earth_width, earth_terrain, earth_karb, bots, mars_width, mars_height, mars_terrain,
+                mars_karb, asteroids, orbit):
     return {
         "seed": seed,
         "earth_map": {
             "planet": "Earth",
-            "height": height,
-            "width": width,
+            "height": earth_height,
+            "width": earth_width,
             "initial_units": bots,
             "is_passable_terrain": earth_terrain[::-1],
             "initial_karbonite": earth_karb[::-1],
         },
         "mars_map": {
             "planet": "Mars",
-            "height": height,
-            "width": width,
+            "height": mars_height,
+            "width": mars_width,
             "initial_units": [],
             "is_passable_terrain": mars_terrain[::-1],
             "initial_karbonite": mars_karb[::-1],
@@ -135,72 +136,39 @@ def create_json(seed, width, height, earth_terrain, earth_karb, bots, mars_terra
     }
 
 if __name__ == "__main__":
-    try:
-        seed = int(input(
-            "\nWelcome to the barebones map creation wizard! Now complying with the Battlecode specs.\n"
-            "Please enter a seed for the RNG (some random integer): "))
-        valid = False
-        while not valid:
-            width, height, *_ = [int(i) for i in
-                                 input(
-                                                 "Enter Earth map width and height. Minimum is 20x20, maximum is 50x50. e.g 25 25: ").strip().split(
-                                                 " ")]
-            valid = validate_map_dims(height, width)
-            if not valid:
-                print(
-                    "Sorry, that was not a valid dimension. This would be rejected by the Battlecode engine. Try again.")
+	try:
+		seed = random.randint(0,10000)
+		earth_width, earth_height, *_ = [int(i) for i in input("Enter Earth dimensions. Minimum 20x20, maximum 50x50. e.g 25 25: ").strip().split(" ")]
+		
+		print("""
+Instructions:
+LMB: obstacle, RMB: clear
+Hold [0-9] + LMB: Karbonite
+Hold W + LMB: Worker""")
+		
+		earth_terrain, earth_karbonite, robot_pos = gui.create_pygame_earth_editor(earth_height, earth_width,"Earth")
+		
+		mars_width, mars_height, *_ = [int(i) for i in input("Enter Mars dimensions. Minimum 20x20, maximum 50x50. e.g 25 25: ").strip().split(" ")]
+		
+		mars_terrain, mars_karbonite, discardme = gui.create_pygame_earth_editor(mars_height, mars_width,"Mars")
+		
+		asteroid_list = generate_strike_pattern(seed, mars_height, mars_width)
+		
+		amplitude=50
+		period=200
+		center=125
+		
+		bots = json_bot_list(robot_pos, earth_height)
+		orbit_params = json_orbit(amplitude, period, center)
+		asteroids = json_random_asteroid_strikes(asteroid_list)
+		
+		filename = input("Enter Map Name:")
+		filename += ".bc18map"
+		print("Creating json...")
+		json_struct = create_json(seed, earth_height, earth_width, earth_terrain, earth_karbonite, bots, mars_width,
+                                  mars_height, mars_terrain, mars_karbonite, asteroids, orbit_params)
+		print("Created json!")
+		dump(json_struct, open(filename, "w"))
 
-        input("\nDefine Earth's geography, karbonite deposits, and initial worker placement.\n"
-              "Left mouse button to place a water tile, right mouse button to clear tile.\n"
-              "Scroll up/down to adjust karbonite on a particular tile, in increments of 5.\n"
-              "Press R or B while hovering over a tile to place a red or blue worker, respectively.\n"
-              "When finished, close the gui to proceed.\n\n"
-              "IMPORTANT: THERE MUST BE AN EVEN TOTAL NUMBER OF WORKERS, 0 < x <= 6. FAILURE TO DO SO WILL RESULT IN LOSS OF MAP.\n"
-              "ALSO IMPORTANT: MAP MUST BE SYMMETRICAL. FAILURE TO DO SO WILL RESULT IN LOSS OF MAP.\n\n"
-              "Press ENTER to continue.")
-        valid = False
-        while not valid:
-            earth_terrain, earth_karbonite, robot_pos = gui.create_pygame_earth_editor(height, width)
-            valid = validate_num_bots(robot_pos)
-            if not valid:
-                input(
-                    "Sorry, that map wouldn't've passed Battlecode's checks. Please try again. Read the 'IMPORTANT'. Press ENTER to continue.")
-
-        input(
-            "Next, define Mars's geography and initial karbonite deposits (even though technically there shouldn't be any).\n"
-            "Left mouse button to place an impassable cliff, right mouse button to clear tile.\n"
-            "When finished, close the gui to proceed.\n"
-            "Press ENTER to continue.")
-
-        mars_terrain, mars_karbonite = gui.create_pygame_mars_editor(height, width)
-        print("Generating asteroid pattern...")
-        asteroid_list = generate_strike_pattern(seed, height, width)
-
-        valid = False
-        while not valid:
-            print(
-                "PLEASE NOTE THAT THE MAXIMUM ALLOWED TRAVEL TIME IS 200 RDS AND MINIMUM ALLOWED TRAVEL TIME IS 50 RDS. KEEP THIS IN MIND.")
-            amplitude = int(input(
-                "Enter an amplitude for the Earth-Mars transfer orbit. This is by how much from the centerline the travel time varies, e.g: 50: "))
-            period = int(input(
-                "Enter a period for the Earth-Mars transfer orbit. This is how often an orbit cycle repeats, in rounds e.g: 200: "))
-            center = int(input(
-                "Enter the center of the Earth-Mars transfer orbit. This is the centerline travel time. e.g: 125: "))
-
-            valid = validate_orbital_pattern(amplitude, period, center)
-            if not valid:
-                print("Sorry, the orbital parameters are outside the allowed values. Please try again.")
-
-        bots = json_bot_list(robot_pos, height)
-        orbit_params = json_orbit(amplitude, period, center)
-        asteroids = json_random_asteroid_strikes(asteroid_list)
-
-        filename = input("Almost done! Give your map a name: ")
-        filename += ".bc18map"
-        print("Creating json...")
-        json_struct = create_json(seed, width, height, earth_terrain, earth_karbonite, bots, mars_terrain, mars_karbonite, asteroids, orbit_params)
-        print("Created json!")
-        dump(json_struct, open(filename, "w"))
-
-    except KeyboardInterrupt:
-        print("Exiting. File will not be created.")
+	except KeyboardInterrupt:
+		print("Exiting. File will not be created.")

@@ -1,16 +1,14 @@
-Battlecode 2018 Unofficial Mapmaking Tool
+# bc18mapedit
+Map editor for Battlecode 2018
 
-Dependencies:
-* Python 3.5
-* pygame (pip3 install pygame)
+How to use:
+Clone or download this repo to somewhere on your computer
+Make sure you have Python 3 installed
+Run main.py and follow the instructions
 
-To run:
-`python3 main.py`
+On Windows 10 Home, you run main.py by following these steps:
+1. Open command prompt (cmd.exe)
+2. In the command prompt, navigate to the place where you downloaded these files
+3. Type in 'py -3 main.py' and hit enter
 
-Other than that, the tool is fairly self-explanatory.
-If you notice a bug, feel free to open a pull request!
-Have fun!
-
-Disclaimer: I haven't extensively tested the tool against the game. This may cause the Docker engine to crash.
-I'm not liable for any wasted disk space as a result of restarting the Docker container.
-Use at your own risk, however minimal it may be.
+Once you open the program there are instructions for making a map printed onto the command window.
